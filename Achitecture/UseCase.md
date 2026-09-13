@@ -16,9 +16,11 @@ flowchart LR
         UC_Create([Créer une partie])
         UC_CreateMulti([Créer une partie multi-jeux])
         UC_Join([Rejoindre une partie])
+        UC_Leave([Quiter une partie])
         UC_Cancel([Annuler une partie])
         UC_Restart([Relancer une partie])
         UC_Finish([Clôturer la partie])
+        UC_Help([Consulter les commande])
         
         %% Logique système
         UC_Grid([Générer les grilles])
@@ -36,9 +38,11 @@ flowchart LR
     User --- UC_Profile
     User --- UC_Create
     User --- UC_Join
+    User --- UC_Leave
     User --- UC_Cancel
     User --- UC_Restart
     User --- UC_Finish
+    User --- UC_Help
 
     %% Extensions
     UC_ProfileOther -. "<< extend >>" .-> UC_Profile
