@@ -23,7 +23,7 @@ classDiagram
         +String riotMatchId
         +Joueur createur
         +List~Joueur~ participants
-        +MiniJeu jeuActif
+        +List~MiniJeu~ jeux
         +ajouterJoueur(j: Joueur) bool
         +retirerJoueur(j: Joueur) void
         +demarrerPartie() void
