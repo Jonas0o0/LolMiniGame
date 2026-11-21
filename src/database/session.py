@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -5,7 +6,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-DATABASE_URL = "postgresql+asyncpg://user:pass@localhost:5432/mydb"
+DATABASE_URL = f"postgresql+asyncpg://{os.environ["POSTGRES_USER"]}:{os.environ["POSTGRES_PASSWORD"]}@localhost:5432/{os.environ["POSTGRES_DB"]}"
 
 async_engine = create_async_engine(
     DATABASE_URL,
