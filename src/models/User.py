@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
 from sqlalchemy import String, Integer
 from sqlalchemy.orm import mapped_column, Mapped, relationship
@@ -17,6 +18,7 @@ class User(Base):
     riot_tag_line: Mapped[str] = mapped_column(String(16), nullable=False)
     global_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
+    # Relations
     parties: Mapped[list[Party]] = relationship(
         "Party",
         secondary="party_participants",

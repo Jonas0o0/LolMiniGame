@@ -8,20 +8,33 @@ from src.database.base import Base
 
 if TYPE_CHECKING:
     from src.models.Party import Party
+    from src.models.User import User
 
 
 class MiniGame(Base):
+    """Base class for all mini-games in a party (UML: MiniJeu, MCD: INSTANCE_MINI_JEU)."""
     __tablename__ = "mini_games"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     party_id: Mapped[str] = mapped_column(ForeignKey("parties.id", ondelete="CASCADE"), nullable=False)
     game_type: Mapped[str] = mapped_column(String(32), nullable=False)
 
+    # Vainqueur du mini-jeu (MCD: vainqueur_discord_id)
+    winner_discord_id: Mapped[str | None] = mapped_column(ForeignKey("users.discord_id", ondelete="SET NULL"), nullable=True)
+    winner: Mapped[User | None] = relationship("User", foreign_keys=[winner_discord_id])
+
+    # Points gagnés par chaque joueur sur ce jeu (MCD: points_jeu dans RESULTAT_JOUEUR)
+    # Format: {"discord_id_1": 100, "discord_id_2": 50}
+    player_scores: Mapped[dict[str, int] | None] = mapped_column(JSON, nullable=True)
+
+    # Attributs spécifiques à Assassinat
     target_participant_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     target_champion_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
+    # Attributs spécifiques au Bingo (stocke les grilles en JSON : donnees_jeu du MCD)
     player_grids: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
 
+    # Relation avec la partie
     party: Mapped[Party] = relationship("Party", back_populates="games")
 
     __mapper_args__ = {
