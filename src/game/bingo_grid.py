@@ -9,7 +9,7 @@ class BingoGrid:
     role: Role
     cells: list[list[Cell]]
     size: int = 5
-    line_bonus_step: float = 0.2
+    line_bonus: float = 0.2
 
     def _count_completed_lines(self) -> int:
         completed = 0
@@ -45,3 +45,17 @@ class BingoGrid:
             completed += 1
 
         return completed
+
+    def calculate_score(self) -> int:
+        base_points = 0
+
+        for row in self.cells:
+            for cell in row:
+                if cell.is_checked:
+                    base_points += cell.points
+
+        completed_lines = self._count_completed_lines()
+
+        multiplier = 1.0 + completed_lines * self.line_bonus
+
+        return round(base_points * multiplier)

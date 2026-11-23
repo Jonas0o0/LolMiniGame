@@ -75,7 +75,6 @@ classDiagram
         +List~BingoCell~ cells
         +int size
         +float lineBonusStep
-        +checkWin() bool
         +calculateScore() int
     }
 
