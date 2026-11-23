@@ -13,8 +13,8 @@ classDiagram
         <<enumeration>>
         TOP
         JUNGLE
-        MIDDLE
-        BOTTOM
+        MID
+        BOT
         SUPPORT
     }
 
@@ -47,9 +47,12 @@ classDiagram
 
     class MiniGame {
         <<abstract>>
-        +String gameType
-        +initializeGame(participants: List~Player~)* void
-        +analyzeResults(matchData: Object, timeline: Object)* Map~String, int~
+        +String name
+        +String description
+        +Boolean is_active
+        +startGame(playersDiscordIds: List~String~) void
+        +analyzeResults(matchData: Object) void
+        +calculatePoints() Map~String, int~ 
     }
 
     class Assassination {
@@ -72,13 +75,15 @@ classDiagram
     class BingoGrid {
         +String playerDiscordId
         +Role role
-        +List~BingoCell~ cells
+        +List~BingoCell~ availableCells
         +int size
         +float lineBonus
+        +List~List~BingoCell~ ~ 
         +calculateScore() int
     }
 
     class BingoCell {
+        +int id
         +String description
         +String riotStatToCheck
         +int targetValue
