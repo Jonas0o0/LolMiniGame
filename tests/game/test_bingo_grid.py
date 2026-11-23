@@ -71,3 +71,9 @@ def test_build_grid_raises_value_error_when_not_enough_cells() -> None:
 
 def test_no_checked_cells_gives_zero_score(bingo_grid) -> None:
     assert bingo_grid.calculate_score() == 0
+
+def test_completed_row_counts_right_lines_number(bingo_grid) -> None:
+    for cell in bingo_grid.grid[0]:
+        cell.is_checked = True
+
+    assert bingo_grid._count_completed_lines() == 1
