@@ -6,6 +6,7 @@ from .role import Role
 
 @dataclass
 class BingoGrid:
+    """ Represents a bingo grid linked to a player and a role"""
     player_discord_id: str
     role: Role
     available_cells: list[Cell]
@@ -17,6 +18,7 @@ class BingoGrid:
         self._build_grid()
 
     def _build_grid(self):
+        """ Builds the bingo grid """
         total_cells = self.size ** 2
         if len(self.available_cells) < total_cells:
             raise ValueError(
@@ -35,6 +37,7 @@ class BingoGrid:
         self.grid = grid
 
     def _count_completed_lines(self) -> int:
+        """Counts the number of lines completed in the bingo grid"""
         completed = 0
 
         completed += self._count_completed_rows() + self._count_completed_columns() + self._count_completed_diagonals()
@@ -70,6 +73,11 @@ class BingoGrid:
         return completed
 
     def calculate_score(self) -> int:
+        """
+        Calculates the score applying each completed lines bonuses
+
+        Returns: the score rounded to the nearest integer.
+        """
         base_points = 0
 
         for row in self.grid:
