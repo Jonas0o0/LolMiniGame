@@ -3,6 +3,7 @@ from role import Role
 
 @dataclass
 class Cell:
+    id: int
     description: str
     riot_stat_to_check: str
     target_value: int
