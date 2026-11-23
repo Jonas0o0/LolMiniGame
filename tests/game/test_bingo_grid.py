@@ -21,13 +21,18 @@ def _make_cells(count: int, points: int = 10, checked: bool = False) -> list[Cel
         cells.append(cell)
     return cells
 
-def test_build_grid_creates_five_rows_of_five_cells() -> None:
-    available = _make_cells(count=25)
-    bingo_grid = BingoGrid(
+@pytest.fixture
+def bingo_grid() -> BingoGrid:
+    available = _make_cells(count=25, points=10, checked=False)
+    return BingoGrid(
         player_discord_id="123456",
         role=Role.MID,
         available_cells=available,
+        line_bonus=0.2,
     )
+
+def test_build_grid_creates_five_rows_of_five_cells(bingo_grid) -> None:
+    available = _make_cells(count=25)
 
     #tests rows numbers
     assert len(bingo_grid.grid) == 5
@@ -64,13 +69,5 @@ def test_build_grid_raises_value_error_when_not_enough_cells() -> None:
             available_cells=not_enough,
         )
 
-def test_no_checked_cells_gives_zero_score() -> None:
-    available = _make_cells(count=25, points=10, checked=False)
-    grid = BingoGrid(
-        player_discord_id="123456",
-        role=Role.MID,
-        available_cells=available,
-    )
-
-    assert grid.calculate_score() == 0
-
+def test_no_checked_cells_gives_zero_score(bingo_grid) -> None:
+    assert bingo_grid.calculate_score() == 0
