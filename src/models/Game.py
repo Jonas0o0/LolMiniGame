@@ -11,17 +11,20 @@ if TYPE_CHECKING:
     from src.models.MiniGame import MiniGame
 
 # Table d'association gérée par SQLAlchemy (correspond à PARTICIPATION du MCD)
-party_participants = Table(
-    "party_participants",
+game_participants = Table(
+    "game_participants",
     Base.metadata,
-    Column("party_id", ForeignKey("parties.id", ondelete="CASCADE"), primary_key=True),
+    Column("game_id", ForeignKey("games.id", ondelete="CASCADE"), primary_key=True),
     Column("user_discord_id", ForeignKey("users.discord_id", ondelete="CASCADE"), primary_key=True),
     Column("match_score", Integer, default=0, nullable=False),  # points_totaux_match du MCD
 )
 
+# Alias rétrocompatible
+party_participants = game_participants
 
-class Party(Base, TimestampMixin):
-    __tablename__ = "parties"
+
+class Game(Base, TimestampMixin):
+    __tablename__ = "games"
 
     # Attributs issus de l'UML (+String idPartie, +StatutPartie statut, +String riotMatchId)
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -35,13 +38,25 @@ class Party(Base, TimestampMixin):
     # +List~Joueur~ participants
     participants: Mapped[list[User]] = relationship(
         "User",
-        secondary=party_participants,
-        back_populates="parties",
+        secondary=game_participants,
+        back_populates="games",
     )
 
-    # +List~MiniJeu~ jeux (plusieurs mini-jeux par partie)
-    games: Mapped[list[MiniGame]] = relationship(
+    # +List~MiniJeu~ jeux (plusieurs mini-jeux par partie/game)
+    mini_games: Mapped[list[MiniGame]] = relationship(
         "MiniGame",
-        back_populates="party",
+        back_populates="game",
         cascade="all, delete-orphan",
     )
+
+    @property
+    def games(self) -> list[MiniGame]:
+        return self.mini_games
+
+    @games.setter
+    def games(self, value: list[MiniGame]) -> None:
+        self.mini_games = value
+
+
+# Alias rétrocompatible
+Party = Game

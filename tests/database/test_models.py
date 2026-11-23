@@ -4,12 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models import (
     User,
-    Party,
+    Game,
     Bingo,
     Assassination,
     BingoCell,
     BingoGrid,
-    StatutPartie,
+    GameStatus,
 )
 
 
@@ -34,8 +34,8 @@ async def test_create_user(db_session: AsyncSession):
     assert loaded_user.global_score == 0
 
 
-async def test_create_party_with_participants(db_session: AsyncSession):
-    """Vérifie la création d'une Party avec son créateur et ses participants (relation Many-to-Many)."""
+async def test_create_game_with_participants(db_session: AsyncSession):
+    """Vérifie la création d'un Game avec son créateur et ses participants (relation Many-to-Many)."""
     faker = User(
         discord_id="1001",
         riot_puuid="puuid-faker",
@@ -52,35 +52,35 @@ async def test_create_party_with_participants(db_session: AsyncSession):
     )
     db_session.add_all([faker, caps])
 
-    party = Party(
-        status=StatutPartie.EN_ATTENTE.value,
+    game = Game(
+        status=GameStatus.EN_ATTENTE.value,
         creator=faker,
     )
-    party.participants.extend([faker, caps])
-    db_session.add(party)
+    game.participants.extend([faker, caps])
+    db_session.add(game)
     await db_session.commit()
 
     # Relecture avec chargement eager
     stmt = (
-        select(Party)
-        .where(Party.id == party.id)
+        select(Game)
+        .where(Game.id == game.id)
         .options(
-            selectinload(Party.creator),
-            selectinload(Party.participants),
+            selectinload(Game.creator),
+            selectinload(Game.participants),
         )
     )
     result = await db_session.execute(stmt)
-    loaded_party = result.scalar_one()
+    loaded_game = result.scalar_one()
 
-    assert loaded_party.creator.riot_game_tag == "Hide on bush"
-    assert len(loaded_party.participants) == 2
-    participant_tags = [p.riot_game_tag for p in loaded_party.participants]
+    assert loaded_game.creator.riot_game_tag == "Hide on bush"
+    assert len(loaded_game.participants) == 2
+    participant_tags = [p.riot_game_tag for p in loaded_game.participants]
     assert "Hide on bush" in participant_tags
     assert "Caps" in participant_tags
 
 
-async def test_party_with_multiple_mini_games(db_session: AsyncSession):
-    """Vérifie qu'une partie peut contenir plusieurs mini-jeux polymorphiques (Bingo et Assassination)."""
+async def test_game_with_multiple_mini_games(db_session: AsyncSession):
+    """Vérifie qu'un Game peut contenir plusieurs mini-jeux polymorphiques (Bingo et Assassination)."""
     creator = User(
         discord_id="2001",
         riot_puuid="puuid-creator",
@@ -90,8 +90,8 @@ async def test_party_with_multiple_mini_games(db_session: AsyncSession):
     )
     db_session.add(creator)
 
-    party = Party(
-        status=StatutPartie.EN_COURS.value,
+    game = Game(
+        status=GameStatus.EN_COURS.value,
         creator=creator,
     )
 
@@ -113,29 +113,29 @@ async def test_party_with_multiple_mini_games(db_session: AsyncSession):
         target_champion_name="Zed",
     )
 
-    # Ajout des deux mini-jeux dans la même partie
-    party.games.extend([bingo, assassination])
-    db_session.add(party)
+    # Ajout des deux mini-jeux dans le même jeu
+    game.mini_games.extend([bingo, assassination])
+    db_session.add(game)
     await db_session.commit()
 
     # Relecture
     stmt = (
-        select(Party)
-        .where(Party.id == party.id)
-        .options(selectinload(Party.games))
+        select(Game)
+        .where(Game.id == game.id)
+        .options(selectinload(Game.mini_games))
     )
     result = await db_session.execute(stmt)
-    loaded_party = result.scalar_one()
+    loaded_game = result.scalar_one()
 
-    assert len(loaded_party.games) == 2
-    game_types = [g.game_type for g in loaded_party.games]
+    assert len(loaded_game.mini_games) == 2
+    game_types = [g.game_type for g in loaded_game.mini_games]
     assert "BINGO" in game_types
     assert "ASSASSINATION" in game_types
 
-    loaded_assassination = next(g for g in loaded_party.games if isinstance(g, Assassination))
+    loaded_assassination = next(g for g in loaded_game.mini_games if isinstance(g, Assassination))
     assert loaded_assassination.target_champion_name == "Zed"
 
-    loaded_bingo = next(g for g in loaded_party.games if isinstance(g, Bingo))
+    loaded_bingo = next(g for g in loaded_game.mini_games if isinstance(g, Bingo))
     assert loaded_bingo.player_grids is not None
     assert loaded_bingo.player_grids[0]["cells"][0]["description"] == "First Blood"
 
