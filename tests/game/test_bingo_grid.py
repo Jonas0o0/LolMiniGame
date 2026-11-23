@@ -77,3 +77,9 @@ def test_completed_row_counts_right_lines_number(bingo_grid) -> None:
         cell.is_checked = True
 
     assert bingo_grid._count_completed_lines() == 1
+
+def test_completed_row_applies_line_bonus_to_score(bingo_grid) -> None:
+    for cell in bingo_grid.grid[0]:
+        cell.is_checked = True
+
+    assert bingo_grid.calculate_score() == 60
