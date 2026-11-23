@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.base import Base
 
 if TYPE_CHECKING:
-    from src.models.Party import Party
+    from src.models.Game import Game
     from src.models.User import User
 
 
@@ -35,7 +35,7 @@ class MiniGame(Base):
     player_grids: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
 
     # Relation avec la partie
-    party: Mapped[Party] = relationship("Party", back_populates="games")
+    party: Mapped[Game] = relationship("Party", back_populates="games")
 
     __mapper_args__ = {
         "polymorphic_on": "game_type",

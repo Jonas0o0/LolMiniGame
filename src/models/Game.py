@@ -20,7 +20,7 @@ party_participants = Table(
 )
 
 
-class Party(Base, TimestampMixin):
+class Game(Base, TimestampMixin):
     __tablename__ = "parties"
 
     # Attributs issus de l'UML (+String idPartie, +StatutPartie statut, +String riotMatchId)

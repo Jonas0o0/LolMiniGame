@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models import (
     User,
-    Party,
+    Game,
     Bingo,
     Assassination,
     BingoCell,
@@ -52,7 +52,7 @@ async def test_create_party_with_participants(db_session: AsyncSession):
     )
     db_session.add_all([faker, caps])
 
-    party = Party(
+    party = Game(
         status=StatutPartie.EN_ATTENTE.value,
         creator=faker,
     )
@@ -62,11 +62,11 @@ async def test_create_party_with_participants(db_session: AsyncSession):
 
     # Relecture avec chargement eager
     stmt = (
-        select(Party)
-        .where(Party.id == party.id)
+        select(Game)
+        .where(Game.id == party.id)
         .options(
-            selectinload(Party.creator),
-            selectinload(Party.participants),
+            selectinload(Game.creator),
+            selectinload(Game.participants),
         )
     )
     result = await db_session.execute(stmt)
@@ -90,7 +90,7 @@ async def test_party_with_multiple_mini_games(db_session: AsyncSession):
     )
     db_session.add(creator)
 
-    party = Party(
+    party = Game(
         status=StatutPartie.EN_COURS.value,
         creator=creator,
     )
@@ -120,9 +120,9 @@ async def test_party_with_multiple_mini_games(db_session: AsyncSession):
 
     # Relecture
     stmt = (
-        select(Party)
-        .where(Party.id == party.id)
-        .options(selectinload(Party.games))
+        select(Game)
+        .where(Game.id == party.id)
+        .options(selectinload(Game.games))
     )
     result = await db_session.execute(stmt)
     loaded_party = result.scalar_one()

@@ -1,5 +1,5 @@
 from src.models.User import User
-from src.models.Party import Party
+from src.models.Game import Game
 from src.models.Assassination import Assassination
 from src.models.Bingo import Bingo
 from src.models.BingoGrid import BingoGrid
@@ -9,7 +9,7 @@ from src.models.enums import StatutPartie
 
 __all__ = [
     "User",
-    "Party",
+    "Game",
     "MiniGame",
     "Assassination",
     "Bingo",
