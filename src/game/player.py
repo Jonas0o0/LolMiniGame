@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Player:
+    """ Represents a player """
     discord_id: str
     riot_puuid: str
     riot_game_name: str
