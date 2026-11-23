@@ -54,4 +54,14 @@ def test_build_grid_selects_unique_cell_ids() -> None:
     #creating a set to delete duplicates
     assert len(set(seen_ids)) == 25
 
+def test_build_grid_raises_value_error_when_not_enough_cells() -> None:
+    not_enough = _make_cells(count=10)
+
+    with pytest.raises(ValueError):
+        BingoGrid(
+            player_discord_id="123456",
+            role=Role.MID,
+            available_cells=not_enough,
+        )
+
 
