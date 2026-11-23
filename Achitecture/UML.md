@@ -9,7 +9,7 @@ classDiagram
         CANCELLED
     }
 
-    class LaneRole {
+    class Role {
         <<enumeration>>
         TOP
         JUNGLE
@@ -64,17 +64,17 @@ classDiagram
     class Bingo {
         +List~BingoGrid~ playerGrids
         +int gridSize
-        -generateRandomChallenges(role: LaneRole) List~BingoCell~
+        -generateRandomChallenges(role: Role) List~BingoCell~
         +initializeGame(participants: List~Player~) void
         +analyzeResults(matchData: Object, timeline: Object) Map~String, int~
     }
 
     class BingoGrid {
         +String playerDiscordId
-        +LaneRole role
+        +Role role
         +List~BingoCell~ cells
         +int size
-        +float lineBonusStep
+        +float lineBonus
         +calculateScore() int
     }
 
@@ -82,7 +82,7 @@ classDiagram
         +String description
         +String riotStatToCheck
         +int targetValue
-        +LaneRole role
+        +Role role
         +int points
         +bool isChecked
         +evaluateCondition(endGameStats: Object) bool
@@ -97,6 +97,6 @@ classDiagram
 
     Bingo "1" *-- "1..5" BingoGrid : composes
     BingoGrid "1" *-- "25" BingoCell : composes
-    BingoGrid --> LaneRole : uses
-    BingoCell --> LaneRole : uses
+    BingoGrid --> Role : uses
+    BingoCell --> Role : uses
 ```
