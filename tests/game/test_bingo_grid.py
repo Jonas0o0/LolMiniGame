@@ -64,4 +64,13 @@ def test_build_grid_raises_value_error_when_not_enough_cells() -> None:
             available_cells=not_enough,
         )
 
+def test_no_checked_cells_gives_zero_score() -> None:
+    available = _make_cells(count=25, points=10, checked=False)
+    grid = BingoGrid(
+        player_discord_id="123456",
+        role=Role.MID,
+        available_cells=available,
+    )
+
+    assert grid.calculate_score() == 0
 
