@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 import random
 
-from bingo_cell import Cell
-from role import Role
+from .bingo_cell import Cell
+from .role import Role
 
 @dataclass
 class BingoGrid:
@@ -14,9 +14,9 @@ class BingoGrid:
     grid: list[list[Cell]] = field(default_factory=list, init=False)
 
     def __post_init__(self) -> None:
-        self.build_grid()
+        self._build_grid()
 
-    def build_grid(self):
+    def _build_grid(self):
         total_cells = self.size ** 2
         if len(self.available_cells) < total_cells:
             raise ValueError(
