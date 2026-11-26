@@ -7,8 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.base import TimestampMixin, Base
 
 if TYPE_CHECKING:
-    from src.models.User import User
-    from src.models.MiniGame import MiniGame
+    from src.database.models.user import User
+    from src.database.models.mini_game import MiniGame
 
 # Table d'association gérée par SQLAlchemy (correspond à PARTICIPATION du MCD)
 game_participants = Table(

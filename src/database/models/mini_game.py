@@ -7,8 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.base import Base
 
 if TYPE_CHECKING:
-    from src.models.Game import Game
-    from src.models.User import User
+    from src.database.models.game import Game
+    from src.database.models.user import User
 
 
 class MiniGame(Base):

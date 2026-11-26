@@ -1,4 +1,4 @@
-from src.models.MiniGame import MiniGame
+from src.database.models.mini_game import MiniGame
 
 
 class Assassination(MiniGame):

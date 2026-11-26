@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import Sequence
 from sqlalchemy import select, update, or_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.Game import Game, game_participants
-from src.models.User import User
-from src.models.MiniGame import MiniGame
-from src.models.enums import GameStatus, StatutPartie
+from src.database.models import GameStatus, User
+from src.database.models.game import Game, game_participants
+from src.database.models.mini_game import MiniGame
 
 
 class GameRepository:
