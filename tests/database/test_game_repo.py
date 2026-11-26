@@ -1,8 +1,9 @@
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models import User, Game, Bingo, GameStatus
-from src.repositories.game_repo import GameRepository
+from src.database.models import User, Bingo, Assassination, MiniGame, GameStatus
+from src.database.repositories import GameRepository, PartyRepository
 
 
 @pytest.fixture
@@ -129,25 +130,127 @@ async def test_update_status_and_scores(db_session: AsyncSession, sample_users: 
     await db_session.commit()
 
     # Mise à jour des scores
-    await repo.set_participant_score(game.id, u1.discord_id, 100)
-    await repo.set_participant_score(game.id, u2.discord_id, 50)
+    assert await repo.set_participant_score(game.id, u1.discord_id, 100) is True
+    assert await repo.set_participant_score(game.id, u2.discord_id, 50) is True
+    assert await repo.set_participant_score(game.id, "unknown-user", 99) is False
+    assert await repo.set_participant_score("unknown-game", u1.discord_id, 99) is False
     await db_session.commit()
 
     scores = await repo.get_participant_scores(game.id)
     assert scores[u1.discord_id] == 100
     assert scores[u2.discord_id] == 50
+    assert await repo.get_participant_scores("unknown-game") == {}
 
 
 async def test_delete_game(db_session: AsyncSession, sample_users: tuple[User, User, User]):
     u1, _, _ = sample_users
     repo = GameRepository(db_session)
 
-    game = await repo.create(creator=u1)
+    bingo = Bingo(game_type="BINGO")
+    game = await repo.create(creator=u1, mini_games=[bingo])
     await db_session.commit()
+
+    assert await repo.delete("unknown-game") is False
 
     deleted = await repo.delete(game.id)
     assert deleted is True
     await db_session.commit()
 
-    not_found = await repo.get_by_id(game.id)
-    assert not_found is None
+    assert await repo.get_by_id(game.id) is None
+    assert await repo.get_by_id(game.id, load_relations=False) is None
+    remaining_mini_games = (await db_session.execute(select(MiniGame))).scalars().all()
+    assert remaining_mini_games == []
+
+
+async def test_delete_game_by_instance(db_session: AsyncSession, sample_users: tuple[User, User, User]):
+    u1, _, _ = sample_users
+    repo = GameRepository(db_session)
+
+    game = await repo.create(creator=u1)
+    await db_session.commit()
+
+    assert await repo.delete(game) is True
+    await db_session.commit()
+    assert await repo.get_by_id(game.id) is None
+
+
+async def test_get_by_id_without_relations_and_save(db_session: AsyncSession, sample_users: tuple[User, User, User]):
+    u1, _, _ = sample_users
+    repo = GameRepository(db_session)
+
+    game = await repo.create(creator=u1, games=[Assassination(target_champion_name="Ahri")], status="EN_ATTENTE")
+    await db_session.commit()
+
+    shallow = await repo.get_by_id(game.id, load_relations=False)
+    assert shallow is not None
+    assert shallow.id == game.id
+    assert shallow.status == "EN_ATTENTE"
+
+    # Modification et sauvegarde via save()
+    shallow.riot_match_id = "EUW1_999"
+    shallow.status = GameStatus.EN_COURS.value
+    saved = await repo.save(shallow)
+    await db_session.commit()
+
+    assert saved.riot_match_id == "EUW1_999"
+    reloaded = await repo.get_by_id(game.id)
+    assert reloaded is not None
+    assert reloaded.status == GameStatus.EN_COURS.value
+    assert reloaded.riot_match_id == "EUW1_999"
+    assert len(reloaded.mini_games) == 1
+    assert isinstance(reloaded.mini_games[0], Assassination)
+    assert reloaded.mini_games[0].target_champion_name == "Ahri"
+
+
+async def test_active_game_ignores_finished_and_cancelled(db_session: AsyncSession, sample_users: tuple[User, User, User]):
+    u1, u2, _ = sample_users
+    repo = GameRepository(db_session)
+
+    finished = await repo.create(creator=u1, status=GameStatus.TERMINEE)
+    await repo.add_participant(finished, u2)
+    cancelled = await repo.create(creator=u1, status=GameStatus.ANNULEE)
+    await repo.add_participant(cancelled, u2)
+    await db_session.commit()
+
+    assert await repo.get_active_game_for_user(u1.discord_id) is None
+    assert await repo.get_active_game_for_user(u2.discord_id) is None
+
+    running = await repo.create(creator=u1, status=GameStatus.EN_COURS)
+    await db_session.commit()
+
+    active = await repo.get_active_party_for_user(u1.discord_id)
+    assert active is not None
+    assert active.id == running.id
+
+
+async def test_edge_cases_and_aliases(db_session: AsyncSession, sample_users: tuple[User, User, User]):
+    u1, u2, u3 = sample_users
+    repo = GameRepository(db_session)
+
+    assert PartyRepository is GameRepository
+    assert await repo.get_games_by_status(GameStatus.ANNULEE) == []
+    assert await repo.get_parties_by_status(GameStatus.EN_ATTENTE) == []
+    assert await repo.add_participant("unknown-game", u2) is None
+    assert await repo.remove_participant("unknown-game", u2.discord_id) is None
+    assert await repo.update_status("unknown-game", GameStatus.EN_COURS) is None
+
+    game = await repo.create(creator=u1)
+    await db_session.commit()
+
+    # Scores initiaux à 0
+    assert await repo.get_participant_scores(game.id) == {u1.discord_id: 0}
+
+    # Retrait d'un utilisateur non participant (sans erreur)
+    same_game = await repo.remove_participant(game, u3.discord_id)
+    assert same_game is not None
+    assert len(same_game.participants) == 1
+
+    # Mise à jour statut via instance + conservation du riot_match_id existant
+    await repo.update_status(game, "EN_COURS", riot_match_id="EUW1_KEEP_ME")
+    await repo.update_status(game, GameStatus.TERMINEE)
+    await db_session.commit()
+
+    reloaded = await repo.get_by_id(game.id)
+    assert reloaded is not None
+    assert reloaded.status == GameStatus.TERMINEE.value
+    assert reloaded.riot_match_id == "EUW1_KEEP_ME"
