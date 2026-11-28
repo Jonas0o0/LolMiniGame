@@ -6,7 +6,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 from src.database.base import Base
 
 if TYPE_CHECKING:
-    from src.models.Party import Party
+    from src.database.models.game import Game
 
 
 class User(Base):
@@ -19,8 +19,16 @@ class User(Base):
     global_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Relations
-    parties: Mapped[list[Party]] = relationship(
-        "Party",
-        secondary="party_participants",
+    games: Mapped[list[Game]] = relationship(
+        "Game",
+        secondary="game_participants",
         back_populates="participants",
     )
+
+    @property
+    def parties(self) -> list[Game]:
+        return self.games
+
+    @parties.setter
+    def parties(self, value: list[Game]) -> None:
+        self.games = value

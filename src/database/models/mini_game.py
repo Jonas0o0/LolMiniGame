@@ -7,16 +7,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.base import Base
 
 if TYPE_CHECKING:
-    from src.models.Party import Party
-    from src.models.User import User
+    from src.database.models.game import Game
+    from src.database.models.user import User
 
 
 class MiniGame(Base):
-    """Base class for all mini-games in a party (UML: MiniJeu, MCD: INSTANCE_MINI_JEU)."""
+    """Base class for all mini-games in a game (UML: MiniJeu, MCD: INSTANCE_MINI_JEU)."""
     __tablename__ = "mini_games"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    party_id: Mapped[str] = mapped_column(ForeignKey("parties.id", ondelete="CASCADE"), nullable=False)
+    game_id: Mapped[str] = mapped_column(ForeignKey("games.id", ondelete="CASCADE"), nullable=False)
     game_type: Mapped[str] = mapped_column(String(32), nullable=False)
 
     # Vainqueur du mini-jeu (MCD: vainqueur_discord_id)
@@ -34,8 +34,24 @@ class MiniGame(Base):
     # Attributs spécifiques au Bingo (stocke les grilles en JSON : donnees_jeu du MCD)
     player_grids: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON, nullable=True)
 
-    # Relation avec la partie
-    party: Mapped[Party] = relationship("Party", back_populates="games")
+    # Relation avec la partie / game
+    game: Mapped[Game] = relationship("Game", back_populates="mini_games")
+
+    @property
+    def party_id(self) -> str:
+        return self.game_id
+
+    @party_id.setter
+    def party_id(self, value: str) -> None:
+        self.game_id = value
+
+    @property
+    def party(self) -> Game:
+        return self.game
+
+    @party.setter
+    def party(self, value: Game) -> None:
+        self.game = value
 
     __mapper_args__ = {
         "polymorphic_on": "game_type",
